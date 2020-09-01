@@ -140,7 +140,7 @@ end;
 
 procedure TfrmMain.ZXBOutputAvailable(output: String);
 begin
-  zxbOutput.Lines.Append(output);
+  zxbOutput.Lines.Text := zxbOutput.Lines.Text + output;
   Application.ProcessMessages;
 end;
 
