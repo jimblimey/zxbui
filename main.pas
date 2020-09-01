@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, EditBtn, StdCtrls,
-  Spin, Process, DateUtils, Math;
+  Spin, zxbthread;
 
 type
 
@@ -31,6 +31,8 @@ type
     procedure inFileButtonClick(Sender: TObject);
     procedure inFileEditingDone(Sender: TObject);
     procedure outTypeChange(Sender: TObject);
+    procedure ZXBTerminated(Sender: TObject);
+    procedure ZXBOutputAvailable(output: String);
   private
     procedure SetOutputFilename;
   public
@@ -67,11 +69,10 @@ end;
 
 procedure TfrmMain.btnGoClick(Sender: TObject);
 var
-  AProcess     : TProcess;
-  CharBuffer: array [0..511] of char;
-  ReadCount: integer;
   zxbex: String;
   s: String;
+  ZXB: TZXBThread;
+  Parameters: TStrings;
 begin
   zxbex := '';
   {$IFDEF WINDOWS}
@@ -86,56 +87,35 @@ begin
         zxbex := IncludeTrailingPathDelimiter(zxbPath.Directory) + 'zxb.py';
   {$ENDIF}
 
-  AProcess := TProcess.Create(nil);
-  AProcess.Executable := zxbex;
-
+  btnGo.Enabled := false;
+  Parameters := TStringList.Create;
   if (createLoader.Checked) and (createLoader.Enabled) then
   begin
-    AProcess.Parameters.Add('-B');
+    Parameters.Add('-B');
   end;
   if (doAutorun.Checked) and (doAutorun.Enabled) then
   begin
-    AProcess.Parameters.Add('-a');
+    Parameters.Add('-a');
   end;
   case outType.ItemIndex of
     0: begin
-         AProcess.Parameters.Add('-t');
+         Parameters.Add('-t');
        end;
     1: begin
-         AProcess.Parameters.Add('-T');
+         Parameters.Add('-T');
        end;
     2: begin
-         AProcess.Parameters.Add('-A');
+         Parameters.Add('-A');
        end;
   end;
-  AProcess.Parameters.Add(inFile.Filename);
-
-  RunCommand(zxbex,['--version'],s);
-  zxbOutput.Lines.Add(s);
-
-  btnGo.Enabled := false;
-  AProcess.Options := [poUsePipes, poStdErrToOutPut];
-  AProcess.ShowWindow := swoHide;
-  AProcess.Execute;
-
-  while AProcess.Running do
-  begin
-    {while AProcess.Stderr.NumBytesAvailable > 0 do
-    begin
-      ReadCount := Min(512, AProcess.Stderr.NumBytesAvailable); //Read up to buffer, not more
-      AProcess.Stderr.Read(CharBuffer, ReadCount);
-      zxbOutput.Lines.Append(Copy(CharBuffer, 0, ReadCount));
-    end;}
-    while AProcess.Output.NumBytesAvailable > 0 do
-    begin
-      ReadCount := Min(512, AProcess.Output.NumBytesAvailable); //Read up to buffer, not more
-      AProcess.Output.Read(CharBuffer, ReadCount);
-      zxbOutput.Lines.Append(Copy(CharBuffer, 0, ReadCount));
-    end;
-    Application.ProcessMessages;
-  end;
-  btnGo.Enabled := true;
-  AProcess.Free;
+  Parameters.Add(inFile.Filename);
+  ZXB := TZXBThread.Create(true);
+  ZXB.FreeOnTerminate := true;
+  ZXB.SetParams(Parameters);
+  ZXB.Executable := zxbex;
+  ZXB.OnTerminate := @ZXBTerminated;
+  ZXB.OnOutputAvailable := @ZXBOutputAvailable;
+  ZXB.Start;
 end;
 
 procedure TfrmMain.inFileButtonClick(Sender: TObject);
@@ -151,6 +131,17 @@ end;
 procedure TfrmMain.outTypeChange(Sender: TObject);
 begin
   SetOutputFilename;
+end;
+
+procedure TfrmMain.ZXBTerminated(Sender: TObject);
+begin
+  btnGo.Enabled := true;
+end;
+
+procedure TfrmMain.ZXBOutputAvailable(output: String);
+begin
+  zxbOutput.Lines.Append(output);
+  Application.ProcessMessages;
 end;
 
 end.
