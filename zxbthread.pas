@@ -50,8 +50,9 @@ end;
 
 procedure TZXBThread.Execute;
 var
-  CharBuffer: array [0..511] of char;
-  ReadCount: integer;
+  Buffer: array[0..127] of char;
+  ReadCount: Integer;
+  ReadSize: Integer;
 begin
   FZXBProcess.Executable := FExecutable;
 
@@ -61,11 +62,12 @@ begin
 
   while FZXBProcess.Running do
   begin
-    while FZXBProcess.Output.NumBytesAvailable > 0 do
+    if FZXBProcess.Output.NumBytesAvailable > 0 then
     begin
-      ReadCount := Min(512, FZXBProcess.Output.NumBytesAvailable);
-      FZXBProcess.Output.Read(CharBuffer, ReadCount);
-      FOutput := Copy(CharBuffer, 0, ReadCount);
+      ReadSize := FZXBProcess.Output.NumBytesAvailable;
+      if ReadSize > SizeOf(Buffer) then ReadSize := SizeOf(Buffer);
+      ReadCount := FZXBProcess.Output.Read(Buffer[0], ReadSize);
+      FOutput := Copy(Buffer, 0, ReadCount);
       Synchronize(@DataAvailable);
     end;
   end;
