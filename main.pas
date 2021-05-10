@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, EditBtn, StdCtrls,
-  Spin, zxbthread;
+  Spin, IniFiles, LCLType, zxbthread;
 
 type
 
@@ -14,6 +14,7 @@ type
 
   TfrmMain = class(TForm)
     btnGo: TButton;
+    btnReset: TButton;
     createLoader: TCheckBox;
     zxbPath: TFileNameEdit;
     Label6: TLabel;
@@ -30,6 +31,7 @@ type
     zxbOutput: TMemo;
     orgAddress: TSpinEdit;
     procedure btnGoClick(Sender: TObject);
+    procedure btnResetClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure inFileButtonClick(Sender: TObject);
     procedure inFileEditingDone(Sender: TObject);
@@ -39,6 +41,8 @@ type
     procedure ZXBOutputAvailable(output: String);
   private
     procedure SetOutputFilename;
+    procedure SaveConfig;
+    procedure LoadConfig;
   public
 
   end;
@@ -46,11 +50,49 @@ type
 var
   frmMain: TfrmMain;
 
+const
+  DEFAULTORG = 32768;
+  DEFAULTHEAP = 4768;
+
 implementation
 
 {$R *.lfm}
 
 { TfrmMain }
+
+procedure TfrmMain.SaveConfig;
+var
+  ini: TIniFile;
+begin
+  if not DirectoryExists(GetUserDir + '.zxbui') then mkdir(GetUserDir + '.zxbui');
+  ini := TIniFile.Create(GetUserDir + '.zxbui' + PathDelim + 'config.ini');
+  ini.WriteString('program','zxbpath',zxbPath.Text);
+  ini.WriteInteger('program','output',outType.ItemIndex);
+  ini.WriteInteger('program','orgaddr',orgAddress.Value);
+  ini.WriteInteger('program','heap',heapSize.Value);
+  ini.WriteBool('program','loader',createLoader.Checked);
+  ini.WriteBool('program','autorun',doAutorun.Checked);
+  ini.WriteString('lastfile','lastinput',inFile.FileName);
+  ini.WriteString('lastfile','lastoutput',outFile.FileName);
+  ini.Free;
+end;
+
+procedure TfrmMain.LoadConfig;
+var
+  ini: TIniFile;
+begin
+  if not FileExists(GetUserDir + '.zxbui' + PathDelim + 'config.ini') then exit;
+  ini := TIniFile.Create(GetUserDir + '.zxbui' + PathDelim + 'config.ini');
+  zxbPath.Text := ini.ReadString('program','zxbpath','');
+  outType.ItemIndex := ini.ReadInteger('program','output',0);
+  orgAddress.Value := ini.ReadInteger('program','orgaddr',DEFAULTORG);
+  heapSize.Value := ini.ReadInteger('program','heap',DEFAULTHEAP);
+  createLoader.Checked := ini.ReadBool('program','loader',true);
+  doAutorun.Checked := ini.ReadBool('program','autorun',true);
+  inFile.Text := ini.ReadString('lastfile','lastinput','');
+  outFile.Text := ini.ReadString('lastfile','lastoutput','');
+  ini.Free;
+end;
 
 procedure TfrmMain.SetOutputFilename;
 var
@@ -103,12 +145,12 @@ begin
          Parameters.Add('-A');
        end;
   end;
-  if orgAddress.Value <> 32768 then
+  if orgAddress.Value <> DEFAULTORG then
   begin
     Parameters.Add('-S');
     Parameters.Add(orgAddress.Value.ToString);
   end;
-  if heapSize.Value <> 4768 then
+  if heapSize.Value <> DEFAULTHEAP then
   begin
     Parameters.Add('-H');
     Parameters.Add(heapSize.Value.ToString);
@@ -120,7 +162,22 @@ begin
   ZXB.Executable := zxbPath.Text;
   ZXB.OnTerminate := @ZXBTerminated;
   ZXB.OnOutputAvailable := @ZXBOutputAvailable;
+  zxbOutput.Lines.Add('Building '+inFile.FileName);
   ZXB.Start;
+end;
+
+procedure TfrmMain.btnResetClick(Sender: TObject);
+begin
+  if Application.MessageBox('Are you sure you want to reset form elements?',
+                            'Confirmation', MB_ICONQUESTION + MB_YESNO) = IDNO
+  then exit;
+  outType.ItemIndex := 0;
+  orgAddress.Value := DEFAULTORG;
+  heapSize.Value := DEFAULTHEAP;
+  createLoader.Checked := true;
+  doAutorun.Checked := true;
+  inFile.Text := '';
+  outFile.Text := '';
 end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
@@ -157,6 +214,7 @@ end;
 procedure TfrmMain.ZXBTerminated(Sender: TObject);
 begin
   btnGo.Enabled := true;
+  zxbOutput.Lines.Add('Done!');
 end;
 
 procedure TfrmMain.ZXBOutputAvailable(output: String);
