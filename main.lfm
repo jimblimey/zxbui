@@ -6,6 +6,7 @@ object frmMain: TfrmMain
   Caption = 'ZXBASIC UI'
   ClientHeight = 357
   ClientWidth = 505
+  OnCreate = FormCreate
   LCLVersion = '2.1.0.0'
   object inFile: TFileNameEdit
     Left = 8
@@ -54,15 +55,15 @@ object frmMain: TfrmMain
   object createLoader: TCheckBox
     Left = 256
     Height = 19
-    Top = 72
+    Top = 56
     Width = 90
     Caption = 'Create loader'
     TabOrder = 3
   end
   object doAutorun: TCheckBox
-    Left = 376
+    Left = 256
     Height = 19
-    Top = 72
+    Top = 80
     Width = 64
     Caption = 'Autorun'
     TabOrder = 4
@@ -131,19 +132,6 @@ object frmMain: TfrmMain
     Caption = 'Org Address'
     ParentColor = False
   end
-  object zxbPath: TDirectoryEdit
-    Left = 8
-    Height = 23
-    Top = 120
-    Width = 208
-    Directory = 'C:\zxbasic\'
-    ShowHidden = False
-    ButtonWidth = 23
-    NumGlyphs = 1
-    MaxLength = 0
-    TabOrder = 8
-    Text = 'C:\zxbasic\'
-  end
   object Label5: TLabel
     Left = 8
     Height = 15
@@ -151,5 +139,37 @@ object frmMain: TfrmMain
     Width = 87
     Caption = 'Path to ZXBASIC'
     ParentColor = False
+  end
+  object Label6: TLabel
+    Left = 376
+    Height = 15
+    Top = 56
+    Width = 51
+    Caption = 'Heap Size'
+    ParentColor = False
+  end
+  object heapSize: TSpinEdit
+    Left = 373
+    Height = 23
+    Top = 72
+    Width = 83
+    MaxValue = 8192
+    TabOrder = 8
+    Value = 4768
+  end
+  object zxbPath: TFileNameEdit
+    Left = 8
+    Height = 23
+    Top = 120
+    Width = 208
+    FileName = 'c:\zxbasic\zxbc.exe'
+    DialogOptions = [ofFileMustExist, ofEnableSizing, ofViewDetail]
+    FilterIndex = 0
+    HideDirectories = False
+    ButtonWidth = 23
+    NumGlyphs = 1
+    MaxLength = 0
+    TabOrder = 9
+    Text = 'c:\zxbasic\zxbc.exe'
   end
 end
