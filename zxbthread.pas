@@ -36,6 +36,7 @@ var
   ReadCount: Integer;
   ReadSize: Integer;
   p: TProcess;
+  s: String;
 begin
   p := TProcess.Create(nil);
   p.Executable := Path;
@@ -43,7 +44,7 @@ begin
   p.Options := [poUsePipes, poStdErrToOutPut];
   p.ShowWindow := swoHide;
   p.Execute;
-
+  s := '';
   while p.Running do
   begin
     if p.Output.NumBytesAvailable > 0 then
@@ -51,9 +52,10 @@ begin
       ReadSize := p.Output.NumBytesAvailable;
       if ReadSize > SizeOf(Buffer) then ReadSize := SizeOf(Buffer);
       ReadCount := p.Output.Read(Buffer[0], ReadSize);
-      Result := Copy(Buffer, 0, ReadCount);
+      s := s + Copy(Buffer, 0, ReadCount);
     end;
   end;
+  Result := s;
   p.Free;
 end;
 

@@ -163,6 +163,7 @@ object frmMain: TfrmMain
     Top = 120
     Width = 208
     FileName = 'c:\zxbasic\zxbc.exe'
+    OnAcceptFileName = zxbPathAcceptFileName
     DialogOptions = [ofFileMustExist, ofEnableSizing, ofViewDetail]
     FilterIndex = 0
     HideDirectories = False

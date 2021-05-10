@@ -34,7 +34,7 @@ type
     procedure inFileButtonClick(Sender: TObject);
     procedure inFileEditingDone(Sender: TObject);
     procedure outTypeChange(Sender: TObject);
-    procedure zxbPathChange(Sender: TObject);
+    procedure zxbPathAcceptFileName(Sender: TObject; var Value: String);
     procedure ZXBTerminated(Sender: TObject);
     procedure ZXBOutputAvailable(output: String);
   private
@@ -57,7 +57,9 @@ var
   fparts: TStringArray;
   s: String;
 begin
+  if inFile.FileName = '' then exit;
   fparts := inFile.Filename.Split('.');
+  s := '';
   if Length(fparts) > 0 then
   begin
     case outType.ItemIndex of
@@ -73,7 +75,6 @@ end;
 
 procedure TfrmMain.btnGoClick(Sender: TObject);
 var
-  s: String;
   ZXB: TZXBThread;
   Parameters: TStrings;
 begin
@@ -145,11 +146,11 @@ begin
   SetOutputFilename;
 end;
 
-procedure TfrmMain.zxbPathChange(Sender: TObject);
+procedure TfrmMain.zxbPathAcceptFileName(Sender: TObject; var Value: String);
 begin
-  if (zxbPath.Text <> '') and (FileExists(zxbPath.Text)) then
+  if (Value <> '') and (FileExists(Value)) then
   begin
-    zxbOutput.Text := GetZXBASICVersion(zxbPath.Text);
+    zxbOutput.Text := GetZXBASICVersion(Value);
   end;
 end;
 
