@@ -26,9 +26,23 @@ type
       property Output: String read FOutput write FOutput;
   end;
 
+procedure SaveDebug(s: String);
 function GetZXBASICVersion(Path: String): String;
 
 implementation
+
+procedure SaveDebug(s: String);
+var
+  fo: TStrings;
+  d: String;
+begin
+  fo := TStringList.Create;
+  if FileExists('C:\tmp\debug.txt') then fo.LoadFromFile('C:\tmp\debug.txt');
+  DateTimeToString(d,'hh:nn:ss.zzz',Now);
+  fo.Add('['+d+'] '+s);
+  fo.SaveToFile('C:\tmp\debug.txt');
+  fo.Free;
+end;
 
 function GetZXBASICVersion(Path: String): String;
 var
@@ -90,19 +104,20 @@ begin
   FZXBProcess.Options := [poUsePipes, poStdErrToOutPut];
   FZXBProcess.ShowWindow := swoHide;
   FZXBProcess.Execute;
-
+  SaveDebug('ZXB start');
   while FZXBProcess.Running do
   begin
     if FZXBProcess.Output.NumBytesAvailable > 0 then
     begin
       ReadSize := FZXBProcess.Output.NumBytesAvailable;
+      SaveDebug('Data available: ' + ReadSize.ToString + ' bytes');
       if ReadSize > SizeOf(Buffer) then ReadSize := SizeOf(Buffer);
       ReadCount := FZXBProcess.Output.Read(Buffer[0], ReadSize);
       FOutput := Copy(Buffer, 0, ReadCount);
       Synchronize(@DataAvailable);
     end;
   end;
-
+  SaveDebug('ZXB finish');
   FZXBProcess.Free;
 end;
 

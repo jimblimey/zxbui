@@ -219,8 +219,10 @@ end;
 
 procedure TfrmMain.ZXBOutputAvailable(output: String);
 begin
+  SaveDebug('UI update! ' + Length(output).ToString + ' bytes');
+  zxbOutput.Lines.BeginUpdate;
   zxbOutput.Lines.Text := zxbOutput.Lines.Text + output;
-  zxbOutput.Repaint;
+  zxbOutput.Lines.EndUpdate;
   Application.ProcessMessages;
 end;
 

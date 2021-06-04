@@ -173,13 +173,4 @@ object frmMain: TfrmMain
     TabOrder = 9
     Text = 'c:\zxbasic\zxbc.exe'
   end
-  object btnReset: TButton
-    Left = 336
-    Height = 25
-    Top = 118
-    Width = 75
-    Caption = 'Reset'
-    OnClick = btnResetClick
-    TabOrder = 10
-  end
 end
